@@ -8,12 +8,21 @@
 A small utility to send TOTP authenticator codes to [XIV Launcher][xiv-launcher].
 
 ## Usage
-```
-> xlauth-cli save AD2J0N3FDDJPWEH0ADJP6WK5EGG4PTBT
-> xlauth-cli launch
+
+#### Windows
+```pwsh
+xlauth-cli save AD2J0N3FDDJPWEH0ADJP6WK5EGG4PTBT
+xlauth-cli launch
 ```
 
-`xlauth` is a thin wrapper around `xlauth-cli` intended for use in shortcuts that accepts all of the same command line arguments, but prevents the console window from opening.
+**Note:** `xlauth-cli.exe` is a thin wrapper around `xlauth.exe` to provide a reasonable command line experience on
+Windows. Use `xlauth.exe` when creating a shortcut to prevent the command line window from appearing.
+
+#### Linux
+```bash
+xlauth save AD2J0N3FDDJPWEH0ADJP6WK5EGG4PTBT
+xlauth launch
+```
 
 ## License
 

@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: cargo build --release --features cli-wrapper
+
+      - name: Package
+        run: |
+          $tag = "${{ contains(github.ref_name, '/') && github.sha || github.ref_name }}"
+          Compress-Archive -Force -Path `
+            target/release/xlauth.exe, `
+            target/release/xlauth-cli.exe `
+            -DestinationPath "xlauth-windows-$tag.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: xlauth-windows-*.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Package
+        run: |
+          tag="${{ contains(github.ref_name, '/') && github.sha || github.ref_name }}"
+          tar -czf "xlauth-linux-${tag}.tar.gz" -C target/release xlauth
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: xlauth-linux-*.tar.gz
+
+  release:
+    needs: [ build-windows, build-linux ]
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-build
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/xlauth-windows-*.zip
+            dist/xlauth-linux-*.tar.gz
+          name: "xlauth ${{ github.ref_name }}"
+          body: "Automated release for ${{ github.ref_name }}"
